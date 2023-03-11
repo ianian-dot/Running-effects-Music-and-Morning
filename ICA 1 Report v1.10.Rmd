@@ -1,0 +1,377 @@
+---
+title: |
+ | \vspace{5cm} \LARGE ICA 2 Investigation
+author: "Student Numbers: "
+date: 
+output:
+  pdf_document:
+    toc: no
+    number_sections: true
+    
+---
+```{r libs, include=FALSE}
+library(tidyverse)
+library(tinytex)
+library(knitr)
+library(gridExtra)
+```
+
+\pagebreak
+
+To do:
+
+At the moment we are at 2808 words (excluding tables, including references)
+
+2541 words without references
+
+- What is meant to be in the "i.e.. = . = 0. "
+For the model to include all treatment effects for all levels, we will use the “sum to 0” constraint i.e.. = . = 0. 
+
+- randomising over fitness so long for what it is
+
+- sample size determination "estimate variance 2"
+
+# Abstract
+
+summary of paper...
+
+# Introduction
+
+Running speeds may be influenced by a number of factors, such as time-of-day and listening to music concurrently. It is of athletes and casual runners alike's interest to see how one could potential improve running performance.
+
+The benefits of music on running speeds have been demonstrated in multiple observational and experimental studies. Music can increase exercise intensity [1], lower fatigue by reducing perceived exertion [2] and spur motivation [3]. 'Fast Music' defined as a tempo of 125-145 beats/minute [4] is theorised to increase performance through mechanisms such as inducing arousal or increasing pacing [1]. 
+
+Physiological functions follow a 24h circadian rhythm including body temperature and lung function [5]. It is conceivable that time of day impacts running speeds, although there is scant evidence in the literature around this. One study showed that running in the morning (0700-0900) significantly elevated the rating of perceived exertion compared to running in the evening (1800-2100) [6].
+
+Through a fully crossed experimental design, we aim to investigate and quantify how music and the morning effect affect running performance, particularly the less researched "morning effect", as well as a possible interactions that we believed remains unstudied.
+
+\pagebreak
+
+# Design and Data
+
+A three-way crossed factorial design with two factors and a blocking variable was implemented where interactions between the two factors can be studied. For simplicity of this smaller scale experiment, we assume no interaction between the blocker and the two factors, preventing the strain of estimating too many parameters for given sample size. A visualisation is given below in Figure 1:
+
+```{r 2by2 layout, fig.align='center', out.width="50%", fig.cap = "Visualisation of design: The four types of data that the experiment aims to collect", fig.show='hold', echo=FALSE, message=FALSE, warning=FALSE}
+include_graphics("/Users/idrishedayat/Documents/STAT0029/ICA 1/2by2layout.png")
+```
+
+## Defining Treatment levels 
+
+* Treatment 1: 'Music'
+
+The ‘music’ treatment will be split into 2 levels: 
+
+| Fast music (Lee, Kimmerly 2014) | Music above 120 BPM (defined as Music = 1) |
+|---|---|
+| No Music | Running without music (defined as Music = 0) |
+
+Spotify provided music used in the experiment for instance: “High Temp - Run” playlist created by “Running150BPM” . The BPMs of the songs were cross-verified using jog.fm (https://jog.fm/workout-songs/). Volume was standardised by making operators play music at full volume, preventing music volume having a confounding effect.
+
+
+* Treatment 2: 'Morning'
+
+‘Morning’ treatment will be split into
+
+| Morning | 8:00 hr (defined as Morning = 1) |
+|---|---|
+| Evening | 16:00 hr (defined as Morning = 0) |
+
+Definitions were borrowed from a similar study (Blazer et al., 2020), focusing instead on resistance-exercise performance. For flexibility we allowed for a 1.5 hours window to complete the run. 
+
+Our outcome of interest is running pace, measured in time per kilometre (TPK in minutes). 
+
+## Model
+
+The statistical model is given as follows:
+
+$$Y_{ijk} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \gamma_k + \epsilon_{ijkl}$$
+Where:
+
+
+$$ \alpha_i = \begin{cases} \alpha_1,  \ \text{if music listened to} \\ \alpha_0, \  \text{otherwise} \end{cases} 
+\ \ \ \ \ \  
+\beta_j = \begin{cases} \beta_1,  \ \text{if ran during morning} \\ \beta_0, \  \text{otherwise} \end{cases}$$ 
+
+* $\gamma_i = \gamma_1, \gamma_2 \text{... for operator i, representing operator effects}$
+* $\text{indices :} \  i,j = 0,1, k = 1,2,3,4, l = 1,2 \ \text{(repetition number)}$
+  + $I(Music) = i, I(Morning) = j$ 
+* $\mu = \text{Grand Mean}$
+* $\epsilon_{ijkl} = \text{Error term for operator k, music = i, morning = j, corresponding repitition = l }$ 
+* $(\alpha\beta)_{ij} = \text{interaction term between}\  \alpha_i \ \text{and} \ \beta_j$
+* assume $\epsilon_{ijkl} \sim(iid) \  N(0, \sigma^2)$
+
+We define running types as:
+| Running Type | Treatment |
+|---|---|
+| (1) | (Music, Morning) |
+| (2) | (No Music, Morning) |
+| (3) | (Music, Evening) |
+| (4) | (No Music, Evening) |
+
+The model is a 3-way linear ANOVA model with one set of interactions. 
+To include treatment effects for all levels we use the “sum to 0” constraint i.e.. = . = 0. This allows us to interpret the effects at “deviations from grand mean ” and identifiability of the coefficients. 
+
+Unless we reject the interaction effect, ‘main effects’ of music and morning will be interpreted as the ‘effect of one factor, averaged over the other’. 
+
+## Method: Detailing Experimentation
+
+Operators were each instructed to run 2km. To mitigate potential psychological bias from awareness of treatments we instructed operators to run as fast as possible. We also instructed that operators had constant amount of  sleep, and used same running routes and gear (fixed variables). 
+
+Data was collected using Runkeeper or Strava, which have the same functionalities of starting and stopping the time, keeping track of their route, distance and speed (https://runkeeper.com/cms/app/runkeeper-the-basics/). Timings are made using fitness apps of the operator's choice. After running, the participant reported their running pace (TPK) see figure 2:
+
+
+```{r runkeeperexample layout, fig.align='center', out.width="40%", out.height="40%", fig.cap = "Using Runkeeper mobile application to log running pace - TPK = 5:24 is directly measured on the interface", echo=FALSE, message=FALSE, warning=FALSE}
+knitr::include_graphics("/Users/idrishedayat/Documents/STAT0029/ICA 1/runkeeper example.jpeg")
+```
+
+## Randomising Over Fitness
+
+The main potential confounding variable was fitness levels which may vary over the week depending on schedule intensity for a given day. We solved this with the help of R to pre-determine running days by randomising intervals between runs using `round(runif(8, min = 1, max = 3)) ` (Table 2),  requiring participants to decide on their starting date to not clash with their schedules. We then randomised treatment levels by `c(sample((1:4), replace = F), sample((1:4), replace = F))` (sampling without replacement) to avoid clustering as much as possible. 
+These layers of randomisation helped with other confounders such as weather and temperature. Environmental conditions may affect running performance, for example a paper on marathon running performance (Helou et al., 2012) showed temperature increases above optimal temperatures led to slower running times and higher marathon withdrawal rates.
+
+## Blocking Variable 
+
+Fitness will vary from operator to operator, thus performance will vary according to background variables like running frequency, age, height and weight. We used blocking to account for said differences.  Blocking for operators adsorbs other operator-specific traits such as running routes. Pacing strategies and motivation are also accounted for through operator blocking. A study of the impact of pacing strategies on five kilometre running time trial performance (Gosztyla  et al., 2006) showed a change in strategy can optimise running times, thus the need for blocking.
+Using such blocks can increase precision in estimating music and morning effects. 
+
+## Fixed Effects:
+
+We assumed fixed effects for our variables, due to the trivial nature of generalising  from treatment levels of our factors, making out ANOVA analysis more directly interpretable.
+
+## Interaction Terms:
+
+We initially included an interaction effect between music and morning variables. This is not only for simplicity of analysis but we are also interested in the general/average effects of morning or music, and how these may interact.
+
+## Sample size determination:
+
+To estimate the models variance of error term, we need at least m = 1 replicates per cell. We aimed for a statistically significant difference in TPK of 30 seconds. We used estimated variance in calculations from a paper (Gallagher, 1991) examining impact of training regiments on 2000m running performance. The paper found a standard deviation of 59 seconds for level training, a viable estimate for our experiment.
+
+| Source of Variation                | Calculation        | Degrees of Freedom |
+|------------------------------------|--------------------|--------------------|
+| Music (Treatment 1) r1 levels      | r1-1               | 1                  |
+| Morning (Treatment 2) r2 levels    | r2-2               | 1                  |
+| Blocking (Operators)               | b-1                | 3                  |
+| Interaction between  Music:Morning | (r1-1)(r2-1)       | 1                  |
+| Within Cell (Error)                | (by subtraction)   | 25                 |
+| Total: m replicates per cell       | (m)(r1)(r2)(b) - 1 | 31                 |
+
+### Calculation 1: Determining half confidence interval of measure effect when m=2 
+
+
+For 2 groups (Music vs No Music): 
+Half confidence interval $= t_{\frac{\alpha}{2}}* s * \sqrt{\frac{2}{b'}}$ ,
+where s =error variance estimate, b' = no. samples for music only (balanced design) 
+
+Let significance level  be $\alpha$ = 0.1
+b’ = 4 * 2 * 2 = 16 (4 runners, morning and evening, 2 replicates) 
+s = 1 min (borrowed from other studies on similar distances) 
+
+On R: 
+```{r, echo = T, results = 'hide'}
+## case 3: 2 binary effects, 4 operators, replicate= 2
+t <- qt(0.95, df = 25) 
+half_ci <- t*sqrt(2/16)*1
+half_ci * 60 ## 36.24
+```
+
+Result = 36.24.  Thus m = 2  captures a difference of 36.24 seconds between music and no music with statistical significance. 
+Due to cost and time constraints we settled on m = 2.
+We opted for a balanced design; all operators running same 8 runs to maximise power and estimate music and morning effects with equal precision, resulting in a total sample size of n=32.
+
+Table 2: Running schedule 
+
+Below is the running schedule determined from spacing intervals to randomise over fitness. Before the experiment, we had trial runs that were initially used to get a realistic sense of times to expect, also highlighting potential problems.
+
+```{r Running Schedule Table, echo = FALSE}
+Ian_days <- c(round(runif(7, min = 1, max = 3)),0)
+Idris_days <- c(round(runif(7, min = 1, max = 3)),0)
+Operator_1_days <- c(round(runif(7, min = 1, max = 3)),0)
+Operator_2_days <- c(round(runif(7, min = 1, max = 3)),0)
+Operator_3_days <- c(round(runif(7, min = 1, max = 3)),0)
+
+Ian_running_type <- c(sample((1:4), replace = F), sample((1:4), replace = F))
+Idris_running_type <- c(sample((1:4), replace = F), sample((1:4), replace = F))
+Op1_running_type <- c(sample((1:4), replace = F), sample((1:4), replace = F))
+Op2_running_type <- c(sample((1:4), replace = F), sample((1:4), replace = F))
+Op3_running_type <- c(sample((1:4), replace = F), sample((1:4), replace = F))
+
+Running_Schedule <- data.frame(rbind(Ian_days, Ian_running_type,
+                 Idris_days, Idris_running_type,
+                 Operator_1_days, Op1_running_type,
+                 Operator_2_days, Op2_running_type, 
+                 Operator_3_days, Op3_running_type))
+Running_Schedule["Interval/Running Type"] <- rep(c("Interval(days)", "Running Type"), 5)
+colnames(Running_Schedule) <- paste("Run", (1:8))
+Running_Schedule <- Running_Schedule[c(9, (1:8))]
+
+Running_Schedule$Operator <- paste("Operator", rep((1:5),each = 2))
+Running_Schedule <- Running_Schedule[c(10,(1:9))]
+rownames(Running_Schedule) <- NULL
+
+colnames(Running_Schedule)[2] <- "Interval / Run Type"
+#Running_Schedule[seq(1,10,2), 10] <- "0"
+
+library(kableExtra)
+
+kable(Running_Schedule, 
+      caption = "Running schedule: Intervals and Running Type") %>%
+  kable_classic() %>%
+  row_spec(c(1,3,5,7,9), bold = T) %>%
+  footnote(c("Runners have to decide on the date of their first run",
+           "Interval = number of days of rest between runs, e.g. 'Run 1 = 2' means 2 days of rest between Run 1 and Run 2",
+            "Running Type: 1,2,3,4 correspond to (Music, Morning), (No Music, Morning), (Music, Evening), (No Music, Evening) respectively")) %>%
+  add_header_above(c(" " = 2, "Runs" = 8)) %>%
+  kable_styling(latex_options = "scale_down")
+```
+
+
+
+
+# Analysis and Discussion
+
+
+```{r Idris Data Reading, echo=FALSE, message=FALSE, warning=FALSE}
+#Idris Data Reading
+data <- as_tibble(read.csv("Data Collection.csv"))
+
+data <- data %>% 
+  rename(
+    Music = Music.1..Yes.,
+    Morning = Morning.1...Yes., 
+    TPKmins = TPK.mins.
+  )
+
+data1 <- data %>% 
+  rename(
+    TPK = TPKmins
+  )
+data1 <- data1[c("Operator", "Music", "Morning", "TPK")]
+data1 <- mutate_at(data1, vars("Operator", "Music", "Morning"), as.factor)
+data1$Music
+```
+
+## Initial Data Analysis 
+```{r rawdataplots, echo=FALSE, message=FALSE, warning=FALSE}
+## Idris's initial boxplot
+
+# datmod <- data[c("Operator", "Run.type", "Music", "Morning", "TPKmins")]
+# datmodfac <- mutate_at(datmod, vars("Operator", "Run.type", "Music", "Morning"), as.factor)
+# # 
+# boxplot(datmodfac$TPKmins ~ datmodfac$Operator, main = "Box Plot of Time per Kilomtre (minutes)", xlab= "Operator", ylab = "Time per Kilomtre (minutes)")
+
+## Plot1: All Data 
+levels(data1$Music) <- c("None", "Music")
+levels(data1$Morning) <- c("Evening", "Morning")
+
+data1 %>% ggplot(aes( y = TPK, x = Music,color = (Operator),group = (Operator), shape = (Operator))) +
+  geom_point() +
+  facet_grid(~Morning)+
+  labs(title = "Raw Data: Recorded TPKs")
+
+## Plot2: Operator variance
+
+
+jitplot1 <- ggplot(data1, aes(y = TPK, x = Operator, color = Operator)) + geom_jitter()
+boxplot1 <- ggplot(data1, aes(y = TPK, x = Operator, fill = Operator)) + geom_boxplot()
+grid.arrange(jitplot1,boxplot1, ncol=2)
+``` 
+As seen above, Operators and TPK, Operator 2 clearly has lowest variability. We see Operators 3 and 4 had had noticeably higher TPK than 1 and 2, with 3 having by far the longest TPK and largest variability.
+
+££££ Are We Missing text here for other plots???
+
+```{r aov1, echo=FALSE, message=FALSE, warning=FALSE}
+aov_1 <- aov(TPK~Operator + Music*Morning, data1)
+summary(aov_1)
+summary.lm(aov_1)
+```
+
+Using results above, the hypothesis test p-value for the presence of an interaction is 0.372, thus insufficient evidence from our dataset to reject the null hypothesis that an interaction does not exist. We proceed with the analysis without said interaction term, also improving interpretability of the main effects
+Blocking is significant as expected, a large F value of 202.685 and a p-value effectively 0 from the F(3,15) distribution. Hence blocking fulfils the purpose of 'removing some sum of squares error', improving precision of the other factor estimates. 
+
+
+```{r aov2,echo=FALSE, message=FALSE, warning=FALSE}
+# - Results: no significant interaction effects, leave out interaction
+aov_2 <- aov(TPK~Operator + Music+Morning, data1, contrasts = list(Operator = "contr.sum",
+                                                                      Music = "contr.sum",
+                                                                      Morning = "contr.sum"))
+summary(aov_2)
+summary.lm(aov_2)
+TukeyHSD(aov_2)
+```
+
+Estimated factorial effect of music (twice the treatment effect alpha estimate from the model) is a decrease of 0.615 minutes in TPK. (95% CI: -0.873231, -0.3563524), statistically significant for $\alpha = 0.05$. This supports the current stance in literature that music improving running performance.
+Estimated factorial effect of morning is a 0.171 minute increase, although statistically insignificant for the same confidence level. This is likely due to the small sample size which results in a large standard error relative to the calculated morning effect.
+
+As the distance recommended and ran by participants was only 2km, the main factor effects may be less pronounced due to relatively short distance. The effects could be more noticeable using a larger distance, providing potentially larger, more significant estimates. 
+
+
+
+
+
+## Conclusions
+
+Factorial effect estimates, calculated as contrast of treatment means,  allow interpretation of main effects as the overall effect averaged across all other independent variables. Operator variables have the greatest values in magnitude as expected due to initial fitness levels. Music has a relatively large value in magnitude compared to the morning variable. Morning1 has a negative coefficient, indicating that runs in the evening result in lower TPK compared morning runs. Music1 has a positive coefficient, thus suggesting implementing runs without music result in higher TPK. Outcomes suggest improved performance with music, and runs later in the day.
+ 
+ 
+
+
+## Model Assumptions / Diagnostic Plots
+
+
+``` {r diagnostics, fig.align = 'center', echo=FALSE, message=FALSE, warning=FALSE}
+
+par(mfrow= c(1,2))
+resid <- residuals(aov_1)
+fitted <- fitted.values(aov_1)
+plot(fitted,resid, pch=8 ,main= "Fitted vs Residual Values Plot", xlab= "Fitted Values", ylab = "Residuals")+ abline(h=0, col="red")
+qqnorm(resid)
+qqline(resid,lwd=2)
+``` 
+
+We see from the fitted v residual plot there is no obvious pattern or correlation, exhibiting preferred behaviour with no residuals standing out as clear outliers, and points 'bouncing randomly' around the 0 line.
+Observing the QQ plots, given that we are working with a small sample, randomness tends to obscure interpretability, however we can observe light tailling off in values indicating some departure from normality.
+ 
+ 
+ 
+@@@ Carried on cutting from here
+
+
+## Study Limitations
+
+
+It is necessary to consider that some of the difference in TPK may be due to unobserved placebo or psychological factors. Runners aware of the existing literature on benefits of music on running may be primed to run faster, biasing the estimates for the factor effects.  
+The study can benefit from larger sample size, to enhance power and precision of factor effect estimates, allowing to narrow down standard error and detect smaller differences in TPK significantly, especially in our case for the Morning effect. 
+One minute was used as an educated guess of standard error for runs, an underestimate given our sample standard deviation of  `r sd(data1$TPK)`. This underestimated the derived number of replicates per entry, nevertheless m = 2 was chosen due to experimental constraints
+
+A 3 way interaction including blockers, or 2 way interaction involving the blocking variable may also improve the precision of factor effects estimation and model effectiveness. Further studies may also look into the interaction between music/morning and initial fitness levels, or focus on operators with closer baseline fitness levels.
+ 
+Some factors were not accounted for in study design, such as different route elevation gain/loss, contributing in running performance variability, as downhill routes require less energy resulting in faster routes. 
+Another area of reflection in our study was that not all operators ran in the same country; some operators ran routes in Singapore, others in England. The different temperatures could have significant unobserved impacts on the performance. Controlling for these environmental factors, or including in the model would improve study design.
+
+\pagebreak
+
+# References
+
+[1]. Edworthy, J., & Waring, H. (2006). The effects of music tempo and loudness level on treadmill exercise. Ergonomics, 49(15), 1597–1610. https://doi.org/10.1080/00140130600899104
+
+[2]. Yamashita, S., Iwai, K., Akimoto, T., Sugawara, J., & Kono, I. (2006). Effects of music during exercise on RPE, heart rate and the autonomic nervous system. The Journal of sports medicine and physical fitness, 46(3), 425–430.
+
+[3]. Priest, D. L., Karageorghis, C. I., & Sharp, N. C. (2004). The characteristics and effects of motivational music in exercise settings: the possible influence of gender, age, frequency of attendance, and time of attendance. The Journal of sports medicine and physical fitness, 44(1), 77–86.
+
+[4]. Lee, Sam & Kimmerly, Derek. (2014). Influence of music on maximal self-paced running performance and passive post-exercise recovery rate. The Journal of sports medicine and physical fitness. 56. 
+
+[5]. Medarov, B. I., Pavlov, V. A., & Rossoff, L. (2008). Diurnal variations in human pulmonary function. International journal of clinical and experimental medicine, 1(3), 267–273.
+
+[6]. Martin, L., Doggart, A. L., & Whyte, G. P. (2001). Comparison of physiological responses to morning and evening submaximal running. Journal of sports sciences, 19(12), 969–976. https://doi.org/10.1080/026404101317108471
+
+[7]. Halbeisen C., (2022). Runkeeper: The Basics.
+Accessed from: https://runkeeper.com/cms/app/runkeeper-the-basics/
+
+[8]. Helou N, Tafflet M, Berthelot G, Tolaini J, Marc A, Guillaume M, et al. (2012) Impact of Environmental Parameters on Marathon Running Performance. PLoS ONE 7(5): e37407. https://doi.org/10.1371/journal.pone.0037407
+
+[9]. Gosztyla, Amy & Edwards, David & Quinn, Timothy & Kenefick, Robert. (2006). The Impact of Different Pacing Strategies on Five-Kilometer Running Time Trial Performance. Journal of strength and conditioning research / National Strength & Conditioning Association. 20. 882-6. 10.1519/R-19275.1. 
+
+
+
+
+
