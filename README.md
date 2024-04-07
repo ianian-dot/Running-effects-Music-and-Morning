@@ -1,6 +1,9 @@
 # Running-effects-Music-and-Morning
-Investigating the factorial effects of Music and Morning on Running Times
+## As part of UCL STAT0029 Project
 
-Using ANOVA and basic factorial effects, we designed a fully crossed 3 way experiment to investigate the effects of running in the morning and running with music, including their interaction effect. 
+Title: Investigating the factorial effects of Music and Morning on Running Times
 
-4 volunteers took part in the experiment, and were used as 'operators' i.e. blockers to increase the precision of the estimates of the factorial effects. 
+Details: 
+* Using ANOVA and basic factorial effects, we designed a fully crossed 3 way experiment to investigate the effects of running in the morning and running with music, including their interaction effect. 
+* 4 volunteers took part in the experiment, and were used as 'operators' i.e. blockers to increase the precision of the estimates of the factorial effects.
+* The runs were randomised to prevent confounding, with a pre-set/pre-planned running schedule randomised on R
